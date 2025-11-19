@@ -8,28 +8,89 @@ public class Estoque {
 
     public void addItem(Produto produto, int quantidade) {
 
-        ItemEstoque itemEstoque = new ItemEstoque(produto, quantidade);
+        String id = produto.getId();
 
-        this.itens.put(produto.getId(), itemEstoque);
+        ItemEstoque itemExistente = localizarItem(id);
+
+        if (itemExistente != null) {
+
+            itemExistente.setQuantidade(itemExistente.getQuantidade() + quantidade);
+
+        } else {
+
+            ItemEstoque novoItem = new ItemEstoque(produto, quantidade);
+
+            this.itens.put(id, novoItem);
+        }
 
     }
 
     public void diminuirItem(String codigo, int quantidade) {
-        
-        ItemEstoque item = itens.get(codigo);
 
-        if (item != null && item.getQuantidade() >= quantidade) {
-            
-            item.setQuantidade(item.getQuantidade() - quantidade);
+        ItemEstoque item = this.localizarItem(codigo);
+
+        if (item == null) {
+
+            System.out.println("Item nao encontrado no estoque");
+
         } else {
 
-            throw new IllegalArgumentException("Estoque insuficiente");
+            if (item.getQuantidade() >= quantidade) {
+
+                item.setQuantidade(item.getQuantidade() - quantidade);
+
+            } else {
+                System.out.println("Estoque insuficiente");
+            }
+
         }
-        
-        
 
     }
 
-    
+    private ItemEstoque localizarItem(String codigo) {
 
+        ItemEstoque item = itens.get(codigo);
+
+        return item;
+
+    }
+
+    public boolean temProdutoNoEstoque(String codigo) {
+
+        return itens.containsKey(codigo);
+    }
+
+
+    public void exibirEstoque() {
+
+        if (itens.isEmpty()) {
+            
+            System.out.println("Estoque vazio.");
+            return;
+        }
+
+        System.out.println("================ ESTOQUE ATUAL ================");
+
+        for (ItemEstoque item : itens.values()) {
+
+            Produto p = item.getProduto();
+            System.out.printf(
+                "ID: %s | Nome: %s | Tamanho: %s | Cor: %s | Categoria: %s | Quantidade: %d%n", 
+                p.getId(),
+                p.getNome(),
+                p.getTamanho(),
+                p.getCor(),
+                deixarMaisculo(p.getCategoria().getNome()),
+                item.getQuantidade()
+
+            );
+            
+        }
+
+    }
+
+    private String deixarMaisculo( String texto) {
+
+        return texto.substring(0, 1).toUpperCase() + texto.substring(1);
+    }
 }
