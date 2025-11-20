@@ -3,6 +3,7 @@ title Domínio do Problema - Loja de Roupas Online
 
 ' ======= CLASSES DE DOMÍNIO ========
 
+
 class Produto {
     -id: int
     -nome: String
@@ -21,6 +22,7 @@ class Categoria {
     
 }
 
+'atualize o uml do estoque, pois ele não condiz com o algoritmo.
 class Estoque {
     +adicionarProduto()
     +diminuirItem()
@@ -71,10 +73,16 @@ enum StatusDisponibilidadeEstoque {
 
 class ItemCarrinho {
     -quantidade: int
+    -produto: Produto
+    +ItemCarrinho (produto: Produto, quantidade: int)
 }
 
 class Carrinho {
-    +calcularTotal(): BigDecimal
+    -total : double
+    -itens: List<ItemCarrinho>
+    +limpa()
+    +calcularTotal(): double
+    +adicionarProduto(produto: Produto, quantidade: int)
 }
 
 class Catalogo {
