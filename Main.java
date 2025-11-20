@@ -2,34 +2,28 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Sistema sistema = Sistema.getInstancia();
+        // Cadastrar categoria
 
-        // Cadastra categoria
-        sistema.cadastrarCategoria("Masculina");
+        Sistema.getInstancia().cadastrarCategoria("Masculina");
 
         // Cadastra produtos
-        sistema.cadastrarProduto("Camisa", "GG", "Branca", "Camisa Algodão", "Masculina");
-        sistema.cadastrarProduto("Camisa", "GG", "Branca", "Camisa Algodão", "Masculina");
+        Sistema.getInstancia().cadastrarProduto("Camisa", "GG", "Branca", "Camisa Algodão", "Masculina");
+        Sistema.getInstancia().cadastrarProduto("Camisa", "GG", "Branca", "Camisa Algodão", "Masculina");
 
-        sistema.mostrarEstoque();
+        // Mostrar produtos sem estoque
 
-        // Adiciona ao estoque manualmente
-        sistema.adiconarProdutoEstoque("MAS-00000001", 10);
-        sistema.adiconarProdutoEstoque("MAS-00000002", 5);
+        Sistema.getInstancia().mostrarProdutosNaoVinculadosAoEstoque();
 
-        // Exibe estoque atual
-        sistema.mostrarEstoque();
+        Sistema.getInstancia().mostrarEstoque();
 
-        // Diminui quantidade de um item
-        sistema.estoque1.diminuirItem("MAS-00000002", 2);
+        // Sistema.getInstancia().consultarPreco("MAS-00000001");
 
-        // Exibe estoque atualizado
-        sistema.mostrarEstoque();
+        // Adicionar preco
 
-        // Cadastra novo produto sem adicionar ao estoque
-        sistema.cadastrarProduto("Camisa", "GG", "Branca", "Camisa Algodão", "Masculina");
+        Sistema.getInstancia().definirPrecoPadrao("MAS-00000001", 50);
 
-        // Exibe produtos sem estoque vinculado
-        sistema.mostrarProdutosNaoVinculadosAoEstoque();
+        double preco = Sistema.getInstancia().consultarPreco("MAS-00000001");
+        System.out.println("Preço vigente do produto MAS-00000001: R$ " + preco);
+
     }
 }
