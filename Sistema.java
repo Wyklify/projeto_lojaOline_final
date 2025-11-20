@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -22,6 +23,7 @@ public class Sistema {
 
     private Map<String, Produto> produtos = new HashMap<>();
     private Map<String, Categoria> categorias = new HashMap<>();
+    private Map<String, TabelaPreco> tabelasPreco = new HashMap<>();
 
     private GeradorSku geradorSku = new GeradorSku();
 
@@ -118,7 +120,7 @@ public class Sistema {
 
     public void adiconarProdutoEstoque(String id, int quantidade) {
 
-       // mostrarProdutosNaoVinculadosAoEstoque();
+        // mostrarProdutosNaoVinculadosAoEstoque();
 
         Produto p = this.produtos.get(id);
 
@@ -137,6 +139,61 @@ public class Sistema {
 
     public void mostrarEstoque() {
         estoque1.exibirEstoque();
+    }
+
+    // BLOCO DE PRECO
+
+    public void definirPrecoPadrao(String produtoId, double valor) {
+
+        Produto p = produtos.get(produtoId);
+
+        if (p == null) {
+
+            System.out.println("Produto não encontrado: " + produtoId);
+            return;
+        }
+
+        // Buscar tabela; se não existir, cria e coloca no map
+
+        TabelaPreco tabela = tabelasPreco.get(produtoId);
+
+        if (tabela == null) {
+
+            tabela = new TabelaPreco(produtoId);
+            tabelasPreco.put(produtoId, tabela);
+        }
+
+        tabela.adiconarPreco(new Preco(valor));
+        System.out.println("Preço padrão definido para ID " + produtoId + ": R$ " + valor);
+
+    }
+
+    public void adicionarPromocao(String produtoId, double valor, LocalDate inicio, LocalDate fim) {
+
+        // Verificar se o produto existe
+
+        Produto p = produtos.get(produtoId);
+
+        if (p == null) {
+
+            System.out.println("Produto não encontrado: " + produtoId);
+            return;
+        }
+
+        // Buscar tabela; se não existir, cria e coloca no map
+        TabelaPreco tabela = tabelasPreco.get(produtoId);
+
+        if (tabela == null) {
+
+            tabela = new TabelaPreco(produtoId);
+            tabelasPreco.put(produtoId, tabela);
+        }
+
+        tabela.adiconarPreco(new Preco(valor, inicio, fim));
+
+        System.out.printf("Promoção adicionada para ID %s: R$ %.2f (%s até %s)%n",
+                produtoId, valor, inicio, fim);
+
     }
 
 }
