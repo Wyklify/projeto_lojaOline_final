@@ -31,6 +31,9 @@ public class Sistema {
 
     Estoque estoque1 = new Estoque();
 
+
+    // BLOCO DE CADASTRAR PRODUTO
+
     // cadastra um produto
 
     public void cadastrarProduto(String nome, String tamanho, String cor, String descricao, String categoria) {
@@ -49,6 +52,13 @@ public class Sistema {
         Produto produto = new Produto(id, nome, tamanho, cor, descricao, categoriaProduto);
 
         produtos.put(id, produto);
+
+        // Cria uma tabela de preco vazia para o produto no momento do cadastro
+
+        if (!tabelasPreco.containsKey(id)) {
+            
+            tabelasPreco.put(id, new TabelaPreco(id));
+        }
 
         System.out.println("Produto cadastrado com sucesso!");
         System.out.println(produto);
@@ -163,7 +173,7 @@ public class Sistema {
             tabelasPreco.put(produtoId, tabela);
         }
 
-        tabela.adiconarPreco(new Preco(valor));
+        tabela.adicionarPreco(new Preco(valor));
         System.out.println("Preço padrão definido para ID " + produtoId + ": R$ " + valor);
 
     }
@@ -189,11 +199,55 @@ public class Sistema {
             tabelasPreco.put(produtoId, tabela);
         }
 
-        tabela.adiconarPreco(new Preco(valor, inicio, fim));
+        tabela.adicionarPreco(new Preco(valor, inicio, fim));
 
         System.out.printf("Promoção adicionada para ID %s: R$ %.2f (%s até %s)%n",
                 produtoId, valor, inicio, fim);
 
+    }
+
+
+    public double consultarPreco(String produtoID) {
+
+        // Verificar se o produto existe
+
+        Produto p = produtos.get(produtoID);
+
+        if (p == null) {
+            
+            throw new IllegalArgumentException("Produto não entrcontado: " + produtoID);
+        }
+
+        // Verifica se a tabela de preco existe
+
+        TabelaPreco tabela = tabelasPreco.get(produtoID);
+
+        if (tabela == null) {
+            
+            throw new IllegalArgumentException("Produto sem tabela de preço" + produtoID);
+        }
+
+        return tabela.obterPrecoVigente(LocalDate.now());
+
+    }
+
+    public double consultarPrecoEm(String produtoId, LocalDate data) {
+
+        Produto p = produtos.get(produtoId);
+
+        if (p == null) {
+            
+            throw new IllegalArgumentException("Produto não encontrado: " + produtoId);
+        }
+
+          TabelaPreco tabela = tabelasPreco.get(produtoId);
+
+        if (tabela == null) {
+            
+            throw new IllegalArgumentException("Produto sem tabela de preço" + produtoId);
+        }
+
+        return tabela.obterPrecoVigente(data);
     }
 
 }
