@@ -31,7 +31,6 @@ public class Sistema {
 
     Estoque estoque1 = new Estoque();
 
-
     // BLOCO DE CADASTRAR PRODUTO
 
     // cadastra um produto
@@ -56,7 +55,7 @@ public class Sistema {
         // Cria uma tabela de preco vazia para o produto no momento do cadastro
 
         if (!tabelasPreco.containsKey(id)) {
-            
+
             tabelasPreco.put(id, new TabelaPreco(id));
         }
 
@@ -206,7 +205,6 @@ public class Sistema {
 
     }
 
-
     public double consultarPreco(String produtoID) {
 
         // Verificar se o produto existe
@@ -214,7 +212,7 @@ public class Sistema {
         Produto p = produtos.get(produtoID);
 
         if (p == null) {
-            
+
             throw new IllegalArgumentException("Produto não entrcontado: " + produtoID);
         }
 
@@ -223,7 +221,7 @@ public class Sistema {
         TabelaPreco tabela = tabelasPreco.get(produtoID);
 
         if (tabela == null) {
-            
+
             throw new IllegalArgumentException("Produto sem tabela de preço" + produtoID);
         }
 
@@ -236,18 +234,47 @@ public class Sistema {
         Produto p = produtos.get(produtoId);
 
         if (p == null) {
-            
+
             throw new IllegalArgumentException("Produto não encontrado: " + produtoId);
         }
 
-          TabelaPreco tabela = tabelasPreco.get(produtoId);
+        TabelaPreco tabela = tabelasPreco.get(produtoId);
 
         if (tabela == null) {
-            
+
             throw new IllegalArgumentException("Produto sem tabela de preço" + produtoId);
         }
 
         return tabela.obterPrecoVigente(data);
+    }
+
+    public void mostrarProdutosComPreco() {
+
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+
+        System.out.println("Lista de Produtos com Preço Vigente");
+
+        for (Map.Entry<String, Produto> entrada : produtos.entrySet()) {
+
+            String id = entrada.getKey();
+            Produto produto = entrada.getValue();
+            String nome = produto.getNome();
+
+            double preco;
+
+            try {
+
+                TabelaPreco tabela = tabelasPreco.get(id);
+                preco = tabela.obterPrecoVigente(LocalDate.now());
+                System.out.printf("ID: %s | Nome: %s | Preço: R$ %.2f%n", id, nome, preco);
+
+            } catch (Exception e) {
+
+                System.out.printf("ID: %s | Nome: %s | Preço: NÃO DEFINIDO%n", id, nome);
+            }
+        }
+
     }
 
 }
