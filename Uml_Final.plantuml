@@ -1,0 +1,273 @@
+@startuml
+title Domínio do Problema - Loja de Roupas Online
+
+' ======= CLASSES DE DOMÍNIO ========
+
+class Produto {
+    -id: int
+    -nome: String
+    -tamanho: String
+    -cor: String
+    -descricao: String
+}
+
+class ItemEstoque {
+    -quantidade: int
+    
+}
+
+class Categoria {
+    -nome: String
+    
+}
+
+class Estoque {
+    +adicionarProduto()
+    +diminuirItem()
+    +exibirEstoque()
+    
+}
+
+
+
+class TabelaPreco {
+    -id: int
+    -precoBase: BigDecimal
+    -precoPromocional: BigDecimal
+    -dataInicio: Date
+    -dataFim: Date
+    +calcularPreçoVigente()
+}
+
+class Usuario {
+    -id:int
+    -nome:String
+    -email:String
+    -senha:String
+    -telefone:String
+}
+
+class Cliente extends Usuario {
+    -cpf:String
+    -dataNascimento:Date
+}
+
+class Funcionario extends Usuario {
+}
+
+class Endereco {
+    -cep: String
+    -rua: String
+    -numero: String
+    -bairro: String
+    -complemento: String
+}
+
+enum StatusDisponibilidadeEstoque {
+    DISPONIVEL
+    INDISPONIVEL
+    QTD_INSUFICIENTE
+}
+
+class ItemCarrinho {
+    -quantidade: int
+}
+
+class Carrinho {
+    +calcularTotal(): BigDecimal
+}
+
+class Catalogo {
+    +listarProdutosDisponiveis()
+    +buscarProduto()
+    +filtrarCategoria()
+}
+
+class Pedido {
+    -id: int
+    -dataPedido: Date
+    -status: StatusPedido
+}
+
+class ItemPedido {
+    -quantidade: int
+    -precoUnitario: BigDecimal
+    -subtotal: BigDecimal
+}
+
+class TotalPedido {
+    -valorFrete: BigDecimal
+    -valorDesconto: BigDecimal
+}
+
+class Pagamento {
+    -id: int
+    -valorTotal: BigDecimal
+}
+
+class RastrearPedido {
+    -codigoRastreamento: String
+    -statusAtual: StatusPedido
+    -dataAtualizacao: Date
+}
+
+class NotaFiscal {
+    -id: int
+    -dataEmissao: Date
+}
+
+enum MetodoPagamento {
+    CARTAO_CREDITO
+    CARTAO_DEBITO
+    BOLETO
+    PIX
+}
+
+enum StatusPagamento {
+    PENDENTE
+    CONFIRMADO
+    CANCELADO
+    ESTORNADO
+}
+
+enum StatusPedido {
+    PROCESSANDO
+    ENVIADO
+    ENTREGUE
+    CANCELADO
+}
+
+class Loja {
+    -id:int
+    -nome:String
+}
+
+' ========== AGREGACOES E COMPOSICOES =========
+
+' Produto é composto por Tabela de Preço (não existe sem)
+Produto "1" -- "*" TabelaPreco
+
+' Estoque possui ItemEstoque (composição)
+Estoque *-- "0..*" ItemEstoque
+
+' ItemEstoque referencia Produto (associação)
+ItemEstoque "1" -- "*" Produto
+
+' Produto pertence a uma categoria (agregação)
+Categoria o-- "*" Produto
+
+' Carrinho é composto por ItemCarrinho
+Carrinho *-- "0..*" ItemCarrinho
+
+' ItemCarrinho associa Produto
+ItemCarrinho "1" -- "1" Produto
+
+' Pedido é composto por ItemPedido
+Pedido *-- "*" ItemPedido
+
+' ItemPedido também referencia Produto
+ItemPedido "1" -- "*" Produto
+
+' Pedido pertence a uma Loja (agregação)
+Loja o-- "*" Pedido
+
+' Pedido possui TotalPedido (composição)
+Pedido *-- "1" TotalPedido
+
+' Pedido possui um endereço de entrega (agregação)
+Pedido o-- "1" Endereco
+
+' Cliente possui endereços (agregação)
+Cliente o-- "*" Endereco
+
+' Cliente possui Carrinho (composição)
+Cliente *-- "1" Carrinho
+
+' Pedido gera nota fiscal (composição)
+Pedido *-- "1" NotaFiscal
+
+' Pagamento é associado ao Pedido (composição — depende do Pedido)
+Pedido o-- "1" Pagamento 
+
+' Pagamento usa enums
+Pagamento ..> MetodoPagamento
+Pagamento ..> StatusPagamento
+
+
+@enduml
+
+
+
+
+@startuml
+title DIAGRAMA DO SISTEMA - Loja Online
+
+package "Sistema" {
+
+    class Sistema {
+        
+        +cadastrarProduto()
+        +cadastrarCategoria()
+        +listarCatalogo()
+        +adicionarAoCarrinho()
+        +finalizarCompra()
+        +registrarPagamento()
+        +emitirNotaFiscal()
+    }
+
+    class ControladorProduto {
+        +criarProduto()
+        +editarProduto()
+        +listarProdutos()
+    }
+
+    class ControladorCliente {
+        +autenticarCliente()
+        +registrarCliente()
+        +gerenciarEnderecos()
+    }
+
+    class ControladorCarrinho {
+        +adicionarItem()
+        +removerItem()
+        +calcularTotal()
+    }
+
+    class ControladorPedido {
+        +criarPedido()
+        +cancelarPedido()
+        +rastrearPedido()
+    }
+
+    class ControladorPagamento {
+        +processarPagamento()
+        +emitirNota()
+    }
+}
+
+' -------------------- LIGAÇÕES DO SISTEMA --------------------
+
+Sistema --> ControladorProduto
+Sistema --> ControladorCliente
+Sistema --> ControladorCarrinho
+Sistema --> ControladorPedido
+Sistema --> ControladorPagamento
+
+' Ligação com classes do domínio
+ControladorProduto --> Produto
+ControladorProduto --> Estoque
+
+ControladorCliente --> Cliente
+ControladorCliente --> Endereco
+
+ControladorCarrinho --> Carrinho
+ControladorCarrinho --> ItemCarrinho
+
+ControladorPedido --> Pedido
+ControladorPedido --> TotalPedido
+ControladorPedido --> RastrearPedido
+
+ControladorPagamento --> Pagamento
+ControladorPagamento --> NotaFiscal
+
+@enduml
