@@ -25,5 +25,9 @@ public class Main {
         double preco = Sistema.getInstancia().consultarPreco("MAS-00000001");
         System.out.println("Preço vigente do produto MAS-00000001: R$ " + preco);
 
+
+         Sistema.getInstancia().mostrarProdutosComPreco();
+
+
     }
 }
