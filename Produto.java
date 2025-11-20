@@ -56,4 +56,9 @@ public class Produto {
                 id, nome, tamanho, cor, descricao, categoria);
     }
 
+    public int getPreco() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPreco'");
+    }
+
 }
