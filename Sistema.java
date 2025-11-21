@@ -21,6 +21,8 @@ public class Sistema {
         return sistema;
     }
 
+    // essa classe está virando um monstro, porém corrigir isso não é uma batalha que quero travar.
+
     private Map<String, Produto> produtos = new HashMap<>();
     private Map<String, Categoria> categorias = new HashMap<>();
     private Map<String, TabelaPreco> tabelasPreco = new HashMap<>();
@@ -46,7 +48,7 @@ public class Sistema {
         }
 
         // cria hash de id
-        String id = gerarId(categoriaProduto);
+        String id = gerarIdProduto();
 
         Produto produto = new Produto(id, nome, tamanho, cor, descricao, categoriaProduto);
 
@@ -64,11 +66,9 @@ public class Sistema {
 
     }
 
-    private String gerarId(Categoria categoria) {
+    private String gerarIdProduto() {
 
-        String prefixo = categoria.getPrefixoSKU();
-        geradorSku.registrarPrefixo(prefixo);
-        return geradorSku.gerarProximoSku(prefixo);
+        return geradorSku.gerarProximoSku();
 
     }
 

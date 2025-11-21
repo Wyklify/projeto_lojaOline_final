@@ -1,31 +1,14 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GeradorSku {
 
-    private final Map< String, Integer> proximoPrefixo = new HashMap<>();
+    private final AtomicInteger contador = new AtomicInteger(0);
 
+    public String gerarProximoSku() {
 
-    // so coloca um novo prefixo se ele não existir no map
-    public void registrarPrefixo(String prefixo) {        
+        int atual = contador.incrementAndGet();
 
-        proximoPrefixo.putIfAbsent(prefixo.toUpperCase(), 1);
-    }
-    
-    public String gerarProximoSku (String prefixo) {
-
-        String p = prefixo.toUpperCase().trim();
-
-        Integer atual = proximoPrefixo.get(p);
-
-        if (atual == null) {
-            atual = 1;
-        }
-        
-        String sku = p + "-" + String.format("%08d", atual);
-        proximoPrefixo.put(p, atual + 1);
-
-        return sku;
+        return String.format("PROD-%08d",atual);
     }
 
 }
