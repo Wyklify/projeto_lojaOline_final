@@ -3,7 +3,7 @@ public class Categoria {
     private String nome;
     private String prefixoSKU;
 
-
+    public static final Categoria SEM_CATEGORIA = new Categoria("Sem categoria", "SEM");
 
     public Categoria(String nome, String prefixoSKU) {
 
@@ -26,7 +26,10 @@ public class Categoria {
     public String getPrefixoSKU() {
         return prefixoSKU;
     }
-    
+
+
+
+
     @Override
     public String toString() {
         
