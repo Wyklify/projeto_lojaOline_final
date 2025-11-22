@@ -1,13 +1,16 @@
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class Sistema {
 
     private static Sistema sistema;
 
     private Sistema() {
+
+        inicializarCategoriasPadrao();
 
     }
 
@@ -27,11 +30,17 @@ public class Sistema {
     private Map<String, Categoria> categorias = new HashMap<>();
     private Map<String, TabelaPreco> tabelasPreco = new HashMap<>();
 
+    private Map<String, Estoque> estoques = new HashMap<>();
+
     private GeradorSku geradorSku = new GeradorSku();
 
-    // declaração do estoque
 
-    Estoque estoque1 = new Estoque();
+    // gambiarra para fazer categoria
+
+    private void inicializarCategoriasPadrao() {
+
+        categorias.put(Categoria.SEM_CATEGORIA.getPrefixoSKU(), Categoria.SEM_CATEGORIA);
+    }
 
     // BLOCO DE CADASTRAR PRODUTO
 
@@ -43,6 +52,7 @@ public class Sistema {
         Categoria categoriaProduto = localizarCategoria(categoria);
 
         if (categoriaProduto == null) {
+            
             System.out.println("Categoria não encontrada: " + categoria);
             return;
         }
@@ -72,6 +82,7 @@ public class Sistema {
 
     }
 
+    // na construção de menu pode obrigar o adm a cadastrar um prduto e vincular a um estoque, caso seja necessário gerar alertar de produto não vinculado isso aqui ajuda
     public void mostrarProdutosNaoVinculadosAoEstoque() {
 
         System.out.println("Produtos sem estoque vinculado");
@@ -81,7 +92,19 @@ public class Sistema {
             String id = entrada.getKey();
             Produto produto = entrada.getValue();
 
-            if (!estoque1.temProdutoNoEstoque(id)) {
+            boolean vinculado = false;
+
+            for (Estoque estoque : estoques.values()) {
+
+                if (estoque.temProdutoNoEstoque(id)) {
+                    
+                    vinculado = true;
+                    break;
+                }
+                
+            }
+
+            if (!vinculado) {
 
                 System.out.printf("SKU: %s | Nome: %s | Categoria: %s%n",
                         produto.getId(),
@@ -125,29 +148,85 @@ public class Sistema {
 
     // BLOCO ESTOQUE
 
+    // criar um novo estoque
+
+    public void criarEstoque(String nome) {
+
+        if (estoques.containsKey(nome)) {
+            
+            System.out.println("Estoque já existe" + nome);
+            return;
+        }
+
+        estoques.put(nome, new Estoque());
+
+        System.out.println("Estoque criado: " + nome);
+
+    }
+
+    public void mostrarEstoques() {
+
+        for (Map.Entry<String, Estoque> entry :  estoques.entrySet()) {
+            
+            System.out.println("Estoque: " + entry.getKey());
+            entry.getValue().exibirEstoque();
+        }
+    }
+
     // ADICIONAR PRODUTO NO ESTOQUE
 
-    public void adiconarProdutoEstoque(String id, int quantidade) {
+    public void adiconarProdutoEstoque(String nomeEstoque, String id, int quantidade) {
 
         // mostrarProdutosNaoVinculadosAoEstoque();
 
-        Produto p = this.produtos.get(id);
+        Estoque estoque = estoques.get(nomeEstoque);
 
-        if (p != null) {
-
-            estoque1.addItem(p, quantidade);
-            System.out.println("Estoque atualizado para o produto: " + id);
-        } else {
-
-            System.out.println("Produto não cadastrado" + id);
+        if (estoque == null) {
+            System.out.println("Estoque não encontrado: " + nomeEstoque);
+            return;    
         }
+
+        Produto produto = produtos.get(id);
+
+        if (produto == null) {
+            
+            System.out.println("Produto não encontrado: " + id);
+            return;
+        }
+
+        estoque.addItem(produto, quantidade);
+
+        System.out.printf("Produto %s adicionado ao estoque %s (qtd: %d) %n", id, nomeEstoque, quantidade);
+
+    }
+
+    public void diminuirProdutoEstoque(String nomeEstoque, String id, int quantidade) {
+
+        Estoque estoque = estoques.get(nomeEstoque);
+
+        if (estoque == null) {
+            System.out.println("Estoque não encontrado: " + nomeEstoque);
+            return;    
+        }
+
+        estoque.diminuirItem(id, quantidade);
 
     }
 
     // Visualizar estoque
 
     public void mostrarEstoque() {
-        estoque1.exibirEstoque();
+        
+        if (estoques.isEmpty()) {
+            System.out.println("Nenhum estoque cadastrado");
+            return;
+        }
+
+        for (Map.Entry<String, Estoque> entry : estoques.entrySet()) {
+            
+            System.out.println("======== Estoque: " + entry.getKey() + "========");
+            entry.getValue().exibirEstoque();
+        }
     }
 
     // BLOCO DE PRECO
@@ -275,6 +354,23 @@ public class Sistema {
             }
         }
 
+    }
+
+
+    // BLOCO DE EXIBIÇÃO - TRATA AS SAIDAS DO SISTEMA
+
+    // exibir lista de nomes das categorias cadastradas
+
+    public List<String> getNomesCategorias() {
+
+        List<String> nomes = new ArrayList<>();
+
+        for (Categoria categorias: categorias.values()) {
+            
+            nomes.add(categorias.getNome());
+        }
+
+        return nomes;
     }
 
 }
