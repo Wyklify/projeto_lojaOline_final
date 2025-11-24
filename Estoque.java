@@ -93,4 +93,21 @@ public class Estoque {
 
         return texto.substring(0, 1).toUpperCase() + texto.substring(1);
     }
+
+    /**
+     * Tenta retirar `quantidade` do produto no estoque.
+     * Retorna true se conseguiu remover a quantidade inteira, false caso contrário. */
+    public boolean retirarProduto(String produtoId, int quantidade) {
+        ItemEstoque item = this.localizarItem(produtoId);
+        if (item == null) {
+            return false;
+        }
+
+        if (item.getQuantidade() >= quantidade) {
+            item.setQuantidade(item.getQuantidade() - quantidade);
+            return true;
+        }
+
+        return false;
+    }
 }

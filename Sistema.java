@@ -1,7 +1,6 @@
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class Sistema {
 
@@ -275,6 +274,97 @@ public class Sistema {
             }
         }
 
+    }
+
+    //Bloco do carrinho
+    
+    // instância única do carrinho gerenciada pelo Sistema
+    private Carrinho carrinho = new Carrinho();
+
+    public Carrinho getCarrinho() {
+        return this.carrinho;
+    }
+
+    // Adiciona ao carrinho consultando a tabela de preços (não altera Produto)
+    public void adicionarAoCarrinho(String produtoId, int quantidade) {
+        Produto p = produtos.get(produtoId);
+
+        if (p == null) {
+            System.out.println("Produto não encontrado: " + produtoId);
+            return;
+        }
+
+        double preco;
+        try {
+            preco = consultarPreco(produtoId);
+        } catch (Exception e) {
+            System.out.println("Preço não definido para produto: " + produtoId);
+            return;
+        }
+
+        // Usa o novo método seguro do Carrinho que recebe o preço unitário
+        this.carrinho.adicionarProdutoComPreco(p, quantidade, preco);
+        System.out.printf("Adicionado ao carrinho: %s x%d (R$ %.2f each)%n", produtoId, quantidade, preco);
+    }
+
+    public void mostrarCarrinhoDetalhado() {
+        System.out.println("================ CARRINHO =================");
+        if (this.carrinho.getItensDetalhados().isEmpty()) {
+            System.out.println("Carrinho vazio.");
+            return;
+        }
+
+        for (ItemCarrinho item : this.carrinho.getItensDetalhados()) {
+            Produto pr = item.getProduto();
+            System.out.printf("SKU: %s | Nome: %s | Qtde: %d | Unit: R$ %.2f | Subtotal: R$ %.2f%n",
+                pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(), item.getQuantidade() * item.getPrecoUnitario());
+        }
+
+        System.out.printf("Total: R$ %.2f%n", this.carrinho.calcularTotalComPreco());
+    }
+
+    /**
+     * Finaliza a compra: verifica disponibilidade no estoque e decrementa as quantidades.
+     * Se algum item não puder ser atendido, desfaz as remoções já feitas e informa o usuário.
+     */
+    public void finalizarCompra() {
+        var itens = this.carrinho.getItensDetalhados();
+        if (itens.isEmpty()) {
+            System.out.println("Carrinho vazio. Nada a finalizar.");
+            return;
+        }
+
+        // lista de itens que já foram reduzidos no estoque (produtoId, quantidade)
+        java.util.List<String> removidos = new java.util.ArrayList<>();
+
+        for (ItemCarrinho it : itens) {
+            String sku = it.getProduto().getId();
+            int qtd = it.getQuantidade();
+
+            boolean ok = estoque1.retirarProduto(sku, qtd);
+            if (!ok) {
+                System.out.println("Estoque insuficiente para produto: " + sku + ". Finalização abortada.");
+                // desfazer removidos
+                for (String r : removidos) {
+                    // r tem formato sku:quant
+                    String[] parts = r.split(":");
+                    String s = parts[0];
+                    int q = Integer.parseInt(parts[1]);
+                    // re-adiciona ao estoque
+                    Produto p = produtos.get(s);
+                    if (p != null) {
+                        estoque1.addItem(p, q);
+                    }
+                }
+                return;
+            }
+
+            removidos.add(sku + ":" + qtd);
+        }
+
+        // Se chegou aqui, todos os itens foram removidos do estoque — gera resumo e limpa carrinho
+        System.out.printf("Compra finalizada. Total: R$ %.2f%n", this.carrinho.calcularTotalComPreco());
+        this.carrinho.limparComPreco();
     }
 
 }

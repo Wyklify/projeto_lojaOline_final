@@ -74,15 +74,16 @@ enum StatusDisponibilidadeEstoque {
 class ItemCarrinho {
     -quantidade: int
     -produto: Produto
-    +ItemCarrinho (produto: Produto, quantidade: int)
+    +ItemCarrinho()
 }
 
 class Carrinho {
-    -total : double
-    -itens: List<ItemCarrinho>
-    +limpa()
+    -itens:List<ItemCarrinho>
+    +limparComPreco()
     +calcularTotal(): double
-    +adicionarProduto(produto: Produto, quantidade: int)
+    +calcularTotalComPreco(): double
+    +adicionarProduto()
+    +adicionarProdutoComPreco()
 }
 
 class Catalogo {
