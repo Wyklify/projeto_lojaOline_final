@@ -4,6 +4,16 @@ import java.util.List;
 public class Carrinho {
 
     private List<ItemCarrinho> itens = new ArrayList<>();
+    private String id; // identifica o carrinho (por ex. id do cliente)
+
+    public Carrinho(String id) {
+        this.id = id;
+    }
+
+    // Construtor sem-args para compatibilidade (cria id genérico)
+    public Carrinho() {
+        this.id = "DEFAULT";
+    }
 
     // API legacy: Guarda preço 0.0
     public void adicionarProduto(Produto produto, int quantidade) {
@@ -39,6 +49,25 @@ public class Carrinho {
 
     public List<ItemCarrinho> getItensDetalhados() {
         return this.itens;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+    // Endereço selecionado para entrega (id referenciando um Endereco do cliente)
+    private String enderecoId;
+
+    public void setEnderecoId(String enderecoId) {
+        this.enderecoId = enderecoId;
+    }
+
+    public String getEnderecoId() {
+        return this.enderecoId;
+    }
+
+    public void setEndereco(Endereco endereco) {
+        if (endereco != null) this.enderecoId = endereco.getId();
     }
 
     /**

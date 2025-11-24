@@ -84,6 +84,7 @@ class Carrinho {
     +calcularTotalComPreco(): double
     +adicionarProduto()
     +adicionarProdutoComPreco()
+    +removerProdutoDoCarrinho()
 }
 
 class Catalogo {

@@ -32,37 +32,49 @@ public class Main {
         // sistema.mostrarProdutosComPreco();
         // ---------------------------------------------------------
 
-        // Novo teste: simula fluxo de compra (adiciona, mostra, finaliza e verifica estoque)
-        sistema.adicionarAoCarrinho("PROD-00000001", 2);
-        sistema.adicionarAoCarrinho("PROD-00000003", 1);
-        sistema.adicionarAoCarrinho("ae2we21e2-1321", 3);
-        sistema.mostrarCarrinhoDetalhado();
+        // Novo teste: simula fluxo de compra por cliente (adiciona, mostra, finaliza e verifica estoque)
+        Cliente cliente = new Cliente("C001", "João Silva", "joao@example.com");
 
-        sistema.finalizarCompra();
+        // adiciona dois endereços ao cliente e associa um ao carrinho
+        Endereco e1 = new Endereco("ADDR1", "Rua das Flores", "123", "São Paulo", "01000-000", "Apto 12");
+        Endereco e2 = new Endereco("ADDR2", "Avenida Central", "500", "São Paulo", "01001-000", "Loja");
+        cliente.adicionarEndereco(e1);
+        cliente.adicionarEndereco(e2);
 
-        // Exibir estoque e carrinho após finalização
+        // cria/obtém carrinho do cliente e seleciona o endereço 1
+        Carrinho cartCliente = sistema.criarCarrinhoParaCliente(cliente.getId());
+        cartCliente.setEndereco(e1);
+
+        sistema.adicionarAoCarrinhoParaCliente(cliente.getId(), "PROD-00000001", 2);
+        sistema.adicionarAoCarrinhoParaCliente(cliente.getId(), "PROD-00000003", 1);
+        sistema.adicionarAoCarrinhoParaCliente(cliente.getId(), "ae2we21e2-1321", 3); // SKU inexistente
+        sistema.mostrarCarrinhoDetalhadoParaCliente(cliente.getId());
+
+        sistema.finalizarCompraParaCliente(cliente.getId());
+
+        // Exibir estoque e carrinho após finalização (do cliente)
         sistema.mostrarEstoque();
-        sistema.mostrarCarrinhoDetalhado();
+        sistema.mostrarCarrinhoDetalhadoParaCliente(cliente.getId());
 
 
         System.out.println("----------------------------------------------");
 
         // Teste de remoção no carrinho (AGORA VAI)
         // adicionando so para testar a remoção
-        sistema.adicionarAoCarrinho("PROD-00000001", 3);
-        sistema.adicionarAoCarrinho("PROD-00000002", 2);
+        sistema.adicionarAoCarrinhoParaCliente(cliente.getId(), "PROD-00000001", 3);
+        sistema.adicionarAoCarrinhoParaCliente(cliente.getId(), "PROD-00000002", 2);
         System.out.println("  Após adicionar itens para teste de remoção  ");
-        sistema.mostrarCarrinhoDetalhado();
+        sistema.mostrarCarrinhoDetalhadoParaCliente(cliente.getId());
 
         // Remover 1 unidade do PROD-00000001 (reduzir quantidade)
-        boolean removidoParcial = Sistema.getInstancia().getCarrinho().removerProdutoDoCarrinho("PROD-00000001", 1);
+        boolean removidoParcial = Sistema.getInstancia().getOrCreateCarrinho(cliente.getId()).removerProdutoDoCarrinho("PROD-00000001", 1);
         System.out.println("Remoção parcial PROD-00000001 (1 unidade): " + removidoParcial);
-        sistema.mostrarCarrinhoDetalhado();
+        sistema.mostrarCarrinhoDetalhadoParaCliente(cliente.getId());
 
         // Remover mais unidades do que existe no PROD-00000002 (deve remover o item completamente)
-        boolean removidoTotal = Sistema.getInstancia().getCarrinho().removerProdutoDoCarrinho("PROD-00000002", 5);
+        boolean removidoTotal = Sistema.getInstancia().getOrCreateCarrinho(cliente.getId()).removerProdutoDoCarrinho("PROD-00000002", 5);
         System.out.println("Remoção completa PROD-00000002 (quantidade maior que existente): " + removidoTotal);
-        sistema.mostrarCarrinhoDetalhado();
+        sistema.mostrarCarrinhoDetalhadoParaCliente(cliente.getId());
 
 
     }
