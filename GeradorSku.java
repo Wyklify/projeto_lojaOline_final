@@ -2,13 +2,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class GeradorSku {
 
-    private final AtomicInteger contador = new AtomicInteger(0);
+    private final AtomicInteger contadorProduto = new AtomicInteger(0);
+    private final AtomicInteger contadorPedido = new AtomicInteger(0); 
 
-    public String gerarProximoSku() {
+    public String gerarProximoSkuProduto() {
 
-        int atual = contador.incrementAndGet();
+        int atual = contadorProduto.incrementAndGet();
 
         return String.format("PROD-%08d",atual);
     }
+
+
+    public String gerarProximoSkuPedido() {
+
+        int atual = contadorPedido.incrementAndGet();
+
+        return String.format("PED-%08d",atual);
+    }
+
 
 }
