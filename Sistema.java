@@ -1,13 +1,17 @@
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class Sistema {
 
     private static Sistema sistema;
 
     private Sistema() {
+
+        inicializarCategoriasPadrao();
 
     }
 
@@ -21,17 +25,24 @@ public class Sistema {
         return sistema;
     }
 
-    // essa classe está virando um monstro, porém corrigir isso não é uma batalha que quero travar.
+    // essa classe está virando um monstro, porém corrigir isso não é uma batalha
+    // que quero travar.
 
     private Map<String, Produto> produtos = new HashMap<>();
     private Map<String, Categoria> categorias = new HashMap<>();
     private Map<String, TabelaPreco> tabelasPreco = new HashMap<>();
 
+    private Map<String, Estoque> estoques = new HashMap<>();
+    private Map<String, Pedido> pedidos = new HashMap<>();
+
     private GeradorSku geradorSku = new GeradorSku();
 
-    // declaração do estoque
+    // gambiarra para fazer categoria
 
-    Estoque estoque1 = new Estoque();
+    private void inicializarCategoriasPadrao() {
+
+        categorias.put(Categoria.SEM_CATEGORIA.getPrefixoSKU(), Categoria.SEM_CATEGORIA);
+    }
 
     // BLOCO DE CADASTRAR PRODUTO
 
@@ -43,6 +54,7 @@ public class Sistema {
         Categoria categoriaProduto = localizarCategoria(categoria);
 
         if (categoriaProduto == null) {
+
             System.out.println("Categoria não encontrada: " + categoria);
             return;
         }
@@ -68,10 +80,13 @@ public class Sistema {
 
     private String gerarIdProduto() {
 
-        return geradorSku.gerarProximoSku();
+        return geradorSku.gerarProximoSkuProduto();
 
     }
 
+    // na construção de menu pode obrigar o adm a cadastrar um prduto e vincular a
+    // um estoque, caso seja necessário gerar alertar de produto não vinculado isso
+    // aqui ajuda
     public void mostrarProdutosNaoVinculadosAoEstoque() {
 
         System.out.println("Produtos sem estoque vinculado");
@@ -81,7 +96,19 @@ public class Sistema {
             String id = entrada.getKey();
             Produto produto = entrada.getValue();
 
-            if (!estoque1.temProdutoNoEstoque(id)) {
+            boolean vinculado = false;
+
+            for (Estoque estoque : estoques.values()) {
+
+                if (estoque.temProdutoNoEstoque(id)) {
+
+                    vinculado = true;
+                    break;
+                }
+
+            }
+
+            if (!vinculado) {
 
                 System.out.printf("SKU: %s | Nome: %s | Categoria: %s%n",
                         produto.getId(),
@@ -125,29 +152,92 @@ public class Sistema {
 
     // BLOCO ESTOQUE
 
+    // criar um novo estoque
+
+    public void criarEstoque(String nome) {
+
+        if (estoques.containsKey(nome)) {
+
+            System.out.println("Estoque já existe" + nome);
+            return;
+        }
+
+        estoques.put(nome, new Estoque());
+
+        System.out.println("Estoque criado: " + nome);
+
+    }
+
     // ADICIONAR PRODUTO NO ESTOQUE
 
-    public void adiconarProdutoEstoque(String id, int quantidade) {
+    public void adiconarProdutoEstoque(String nomeEstoque, String id, int quantidade) {
 
         // mostrarProdutosNaoVinculadosAoEstoque();
 
-        Produto p = this.produtos.get(id);
+        Estoque estoque = estoques.get(nomeEstoque);
 
-        if (p != null) {
-
-            estoque1.addItem(p, quantidade);
-            System.out.println("Estoque atualizado para o produto: " + id);
-        } else {
-
-            System.out.println("Produto não cadastrado" + id);
+        if (estoque == null) {
+            System.out.println("Estoque não encontrado: " + nomeEstoque);
+            return;
         }
+
+        Produto produto = produtos.get(id);
+
+        if (produto == null) {
+
+            System.out.println("Produto não encontrado: " + id);
+            return;
+        }
+
+        estoque.addItem(produto, quantidade);
+
+        System.out.printf("Produto %s adicionado ao estoque %s (qtd: %d) %n", id, nomeEstoque, quantidade);
+
+    }
+
+    public void diminuirProdutoEstoque(String nomeEstoque, String id, int quantidade) {
+
+        Estoque estoque = estoques.get(nomeEstoque);
+
+        if (estoque == null) {
+            System.out.println("Estoque não encontrado: " + nomeEstoque);
+            return;
+        }
+
+        estoque.diminuirItem(id, quantidade);
 
     }
 
     // Visualizar estoque
 
     public void mostrarEstoque() {
-        estoque1.exibirEstoque();
+
+        if (estoques.isEmpty()) {
+            System.out.println("Nenhum estoque cadastrado");
+            return;
+        }
+
+        for (Map.Entry<String, Estoque> entry : estoques.entrySet()) {
+
+            System.out.println("======== Estoque: " + entry.getKey() + "========");
+            entry.getValue().exibirEstoque();
+        }
+    }
+
+    public void mostrarEstoque(String nome) {
+
+        Estoque estoque = estoques.get(nome);
+
+        if (estoque == null) {
+
+            System.out.println("Estoque não encontrado: " + nome);
+
+            return;
+        }
+
+        System.out.println("======== Estoque: " + nome + " ========");
+        estoque.exibirEstoque();
+
     }
 
     // BLOCO DE PRECO
@@ -275,6 +365,147 @@ public class Sistema {
             }
         }
 
+    }
+
+    // BLOCO DE PEDDIDOS
+
+    // A ideia é criar um pedido, encher ele de itens e depois pagar.
+    public Pedido criarPedido(Cliente cliente) {
+
+        String idPedido = geradorSku.gerarProximoSkuPedido();
+
+        Pedido pedido = new Pedido(cliente, idPedido);
+
+        pedidos.put(idPedido, pedido);
+
+        System.out.println("Pedido criado com sucesso! ID: " + idPedido + " | Cliente: " + cliente.getNome());
+
+        return pedido;
+    }
+
+    public void adicionarItemAoPedido(String idPedido, String idProduto, int qtd) {
+
+        Pedido pedido = pedidos.get(idPedido);
+        Produto produto = produtos.get(idProduto);
+        TabelaPreco tabela = tabelasPreco.get(idProduto);
+
+        if (pedido == null) {
+
+            System.out.println("Pedido não encontrado: " + idPedido);
+            return;
+        }
+
+        if (produto == null) {
+            System.out.println("Produto não encontrado: " + idProduto);
+            return;
+        }
+        if (tabela == null) {
+            System.out.println("Tabela de preço não encontrada para produto: " + idProduto);
+            return;
+        }
+
+        double precoAtual = tabela.obterPrecoVigente(LocalDate.now());
+
+        pedido.addItem(produto, qtd, precoAtual);
+
+        System.out.printf("Item adicionado ao pedido %s: %s (Qtd: %d, Preço: R$ %.2f)%n",
+                idPedido, produto.getNome(), qtd, precoAtual);
+
+    }
+
+    // Configurar fre e desconto no pedido
+
+    public void configurarFreteDesconto(String idPedido, BigDecimal frete, BigDecimal desconto) {
+
+        Pedido pedido = pedidos.get(idPedido);
+
+        if (pedido != null) {
+            pedido.configurarFreteDesconto(frete, desconto);
+
+            System.out.println("Frete e desconto configurados para o pedido: " + idPedido);
+        } else {
+
+            System.out.println("Pedido não encontrado: " + idPedido);
+        }
+
+    }
+
+    // registra o método de pagamento
+    public void registrarPagamento(String idPedido, MetodoPagamento metodo) {
+
+        Pedido pedido = pedidos.get(idPedido);
+
+        if (pedido != null) {
+
+            String idPagamento = "PAG-" + idPedido;
+            pedido.registrarPagamento(idPagamento, metodo);
+        } else {
+
+            System.out.println("Pedido não encontrado: " + idPedido);
+        }
+    }
+
+    // confirmar se o pagamento foi pago
+
+    public void confirmarPagamento(String idPedido) {
+
+        Pedido pedido = pedidos.get(idPedido);
+
+        if (pedido != null) {
+
+            pedido.confirmarPagamento();
+        } else {
+
+            System.out.println("Pedido não encontrado: " + idPedido);
+        }
+    }
+
+    // Cancelar pagamento
+
+    public void cancelarPagamento(String idPedido) {
+
+        Pedido pedido = pedidos.get(idPedido);
+
+        if (pedido != null) {
+            pedido.cancelarPagamento();
+        } else {
+
+            System.out.println(" Pedido não encontrado: " + idPedido);
+        }
+    }
+
+    // mostrar detalhes de um pedido
+
+    public void exibirPedido(String idPedido) {
+
+        Pedido pedido = pedidos.get(idPedido);
+
+        if (pedido != null) {
+            System.out.println("=== Detalhes do Pedido ===");
+            System.out.println("ID: " + idPedido);
+            System.out.println("Cliente: " + pedido.getPagamento());
+            System.out.println("Status: " + pedido.getPagamento().getStatusPagamento());
+            System.out.println("Total: R$ " + pedido.calcularTotal());
+        } else {
+            System.out.println("Pedido não encontrado: " + idPedido);
+        }
+
+    }
+
+    // BLOCO DE EXIBIÇÃO - TRATA AS SAIDAS DO SISTEMA
+
+    // exibir lista de nomes das categorias cadastradas
+
+    public List<String> getNomesCategorias() {
+
+        List<String> nomes = new ArrayList<>();
+
+        for (Categoria categorias : categorias.values()) {
+
+            nomes.add(categorias.getNome());
+        }
+
+        return nomes;
     }
 
 }
