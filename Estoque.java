@@ -69,7 +69,6 @@ public class Estoque {
             return;
         }
 
-        System.out.println("================ ESTOQUE ATUAL ================");
 
         for (ItemEstoque item : itens.values()) {
 
@@ -93,4 +92,5 @@ public class Estoque {
 
         return texto.substring(0, 1).toUpperCase() + texto.substring(1);
     }
+    
 }
