@@ -14,7 +14,7 @@ public class Preco {
     }
 
 
-    // contrutor para preco promocional
+    // construtor para preco promocional
     public Preco(double valor, LocalDate inicio, LocalDate fim) {
         this.valor = valor;
         this.inicio = inicio;
