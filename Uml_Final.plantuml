@@ -5,7 +5,7 @@ title Domínio do Problema - Loja de Roupas Online
 
 
 class Produto {
-    -id: int
+    -id: String
     -nome: String
     -tamanho: String
     -cor: String
@@ -33,7 +33,7 @@ class Estoque {
 
 
 class TabelaPreco {
-    -id: int
+    -id: String
     -precoBase: BigDecimal
     -precoPromocional: BigDecimal
     -dataInicio: Date
@@ -42,7 +42,7 @@ class TabelaPreco {
 }
 
 class Usuario {
-    -id:int
+    -id:String
     -nome:String
     -email:String
     -senha:String
@@ -73,12 +73,12 @@ enum StatusDisponibilidadeEstoque {
 
 class ItemCarrinho {
     -quantidade: int
-    -produto: Produto
-    +ItemCarrinho()
+    
+    
 }
 
 class Carrinho {
-    -itens:List<ItemCarrinho>
+
     +limparComPreco()
     +calcularTotal(): double
     +calcularTotalComPreco(): double
@@ -94,15 +94,15 @@ class Catalogo {
 }
 
 class Pedido {
-    -id: int
+    -id: String
     -dataPedido: Date
     -status: StatusPedido
 }
 
 class ItemPedido {
     -quantidade: int
-    -precoUnitario: BigDecimal
-    -subtotal: BigDecimal
+    -precoUnitario: double
+    
 }
 
 class TotalPedido {
@@ -111,8 +111,9 @@ class TotalPedido {
 }
 
 class Pagamento {
-    -id: int
+    -id: String
     -valorTotal: BigDecimal
+
 }
 
 class RastrearPedido {
@@ -122,7 +123,7 @@ class RastrearPedido {
 }
 
 class NotaFiscal {
-    -id: int
+    -id: String
     -dataEmissao: Date
 }
 
@@ -164,7 +165,7 @@ Estoque *-- "0..*" ItemEstoque
 ItemEstoque "1" -- "*" Produto
 
 ' Produto pertence a uma categoria (agregação)
-Categoria o-- "*" Produto
+Categoria "1" -- "*" Produto
 
 ' Carrinho é composto por ItemCarrinho
 Carrinho *-- "0..*" ItemCarrinho
