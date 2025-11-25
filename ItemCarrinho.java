@@ -2,10 +2,12 @@ public class ItemCarrinho {
 
     private Produto produto;
     private int quantidade;
+    private double precoUnitario;
 
-    public ItemCarrinho(Produto produto, int quantidade) {
+    public ItemCarrinho(Produto produto, int quantidade, double precoUnitario) {
         this.produto = produto;
         this.quantidade = quantidade;
+        this.precoUnitario = precoUnitario;
     }
 
     public Produto getProduto() {
@@ -18,6 +20,10 @@ public class ItemCarrinho {
 
     public void setQuantidade(int quantidade) {
         this.quantidade = quantidade;
+    }
+
+    public double getPrecoUnitario() {
+        return precoUnitario;
     }
 
 }

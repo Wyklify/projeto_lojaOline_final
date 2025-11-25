@@ -44,6 +44,9 @@ public class Sistema {
         categorias.put(Categoria.SEM_CATEGORIA.getPrefixoSKU(), Categoria.SEM_CATEGORIA);
     }
 
+    // Nova tabela simples de estoque (quantidade por produto) usada pelo carrinho
+    private java.util.Map<String, Integer> tabelaEstoque = new java.util.HashMap<>();
+
     // BLOCO DE CADASTRAR PRODUTO
 
     // cadastra um produto
@@ -208,6 +211,33 @@ public class Sistema {
 
     }
 
+    /**
+     * Consulta a quantidade disponível na tabela de estoque (não acessa o objeto `Estoque`).
+     */
+    public int consultarQuantidadeTabela(String produtoId) {
+        return tabelaEstoque.getOrDefault(produtoId, 0);
+    }
+
+    /**
+     * Decrementa a tabela de estoque na finalização. Retorna true se conseguiu decrementar.
+     */
+    public boolean decrementarTabelaEstoque(String produtoId, int quantidade) {
+        int atual = tabelaEstoque.getOrDefault(produtoId, 0);
+        if (atual >= quantidade) {
+            tabelaEstoque.put(produtoId, atual - quantidade);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Incrementa a tabela de estoque (uso para rollback).
+     */
+    public void incrementarTabelaEstoque(String produtoId, int quantidade) {
+        int atual = tabelaEstoque.getOrDefault(produtoId, 0);
+        tabelaEstoque.put(produtoId, atual + quantidade);
+    }
+
     // Visualizar estoque
 
     public void mostrarEstoque() {
@@ -367,6 +397,177 @@ public class Sistema {
 
     }
 
+    //Bloco do carrinho
+
+    // Mapa de carrinhos por cliente (cada cliente tem seu carrinho)
+    private java.util.Map<String, Carrinho> carrinhos = new java.util.HashMap<>();
+
+    // Retorna o carrinho "default" (compatibilidade)
+    public Carrinho getCarrinho() {
+        return getOrCreateCarrinho("DEFAULT");
+    }
+
+    // Retorna ou cria um carrinho associado ao clienteId
+    public Carrinho getOrCreateCarrinho(String clienteId) {
+        if (clienteId == null || clienteId.isEmpty()) clienteId = "DEFAULT";
+        return carrinhos.computeIfAbsent(clienteId, id -> new Carrinho(id));
+    }
+
+    // Cria explicitamente um carrinho para um cliente (se já existir, retorna o existente)
+    public Carrinho criarCarrinhoParaCliente(String clienteId) {
+        return getOrCreateCarrinho(clienteId);
+    }
+
+    // Adiciona ao carrinho consultando a tabela de preços (não altera Produto)
+    public void adicionarAoCarrinho(String produtoId, int quantidade) {
+        Produto p = produtos.get(produtoId);
+
+        if (p == null) {
+            System.out.println("Produto não encontrado: " + produtoId);
+            return;
+        }
+
+        double preco;
+        try {
+            preco = consultarPreco(produtoId);
+        } catch (Exception e) {
+            System.out.println("Preço não definido para produto: " + produtoId);
+            return;
+        }
+
+        // Usa o novo método seguro do Carrinho que recebe o preço unitário (cart DEFAULT)
+        this.getCarrinho().adicionarProdutoComPreco(p, quantidade, preco);
+        System.out.printf("Adicionado ao carrinho: %s x%d (R$ %.2f each)%n", produtoId, quantidade, preco);
+    }
+
+    public void mostrarCarrinhoDetalhado() {
+        System.out.println("================ CARRINHO =================");
+        Carrinho cart = this.getCarrinho();
+        if (cart.getItensDetalhados().isEmpty()) {
+            System.out.println("Carrinho vazio.");
+            return;
+        }
+
+        for (ItemCarrinho item : cart.getItensDetalhados()) {
+            Produto pr = item.getProduto();
+            System.out.printf("SKU: %s | Nome: %s | Qtde: %d | Unit: R$ %.2f | Subtotal: R$ %.2f%n",
+                pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(), item.getQuantidade() * item.getPrecoUnitario());
+        }
+
+        System.out.printf("Total: R$ %.2f%n", cart.calcularTotalComPreco());
+    }
+
+    // Versões por cliente
+    public void adicionarAoCarrinhoParaCliente(String clienteId, String produtoId, int quantidade) {
+        Produto p = produtos.get(produtoId);
+
+        if (p == null) {
+            System.out.println("Produto não encontrado: " + produtoId);
+            return;
+        }
+
+        double preco;
+        try {
+            preco = consultarPreco(produtoId);
+        } catch (Exception e) {
+            System.out.println("Preço não definido para produto: " + produtoId);
+            return;
+        }
+
+        Carrinho cart = getOrCreateCarrinho(clienteId);
+        cart.adicionarProdutoComPreco(p, quantidade, preco);
+        System.out.printf("Adicionado ao carrinho (cliente=%s): %s x%d (R$ %.2f each)%n", clienteId, produtoId, quantidade, preco);
+    }
+
+    public void mostrarCarrinhoDetalhadoParaCliente(String clienteId) {
+        Carrinho cart = getOrCreateCarrinho(clienteId);
+        System.out.println("================ CARRINHO (cliente=" + clienteId + ") =================");
+        if (cart.getItensDetalhados().isEmpty()) {
+            System.out.println("Carrinho vazio.");
+            return;
+        }
+
+        for (ItemCarrinho item : cart.getItensDetalhados()) {
+            Produto pr = item.getProduto();
+            System.out.printf("SKU: %s | Nome: %s | Qtde: %d | Unit: R$ %.2f | Subtotal: R$ %.2f%n",
+                pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(), item.getQuantidade() * item.getPrecoUnitario());
+        }
+
+        System.out.printf("Total: R$ %.2f%n", cart.calcularTotalComPreco());
+    }
+
+    public void finalizarCompraParaCliente(String clienteId) {
+        Carrinho cart = getOrCreateCarrinho(clienteId);
+        var itens = cart.getItensDetalhados();
+        if (itens.isEmpty()) {
+            System.out.println("Carrinho vazio. Nada a finalizar.");
+            return;
+        }
+
+        java.util.List<String> removidos = new java.util.ArrayList<>();
+
+        for (ItemCarrinho it : itens) {
+            String sku = it.getProduto().getId();
+            int qtd = it.getQuantidade();
+
+            boolean ok = decrementarTabelaEstoque(sku, qtd);
+            if (!ok) {
+                System.out.println("Estoque insuficiente para produto: " + sku + ". Finalização abortada para cliente " + clienteId);
+                for (String r : removidos) {
+                    String[] parts = r.split(":");
+                    String s = parts[0];
+                    int q = Integer.parseInt(parts[1]);
+                    incrementarTabelaEstoque(s, q);
+                }
+                return;
+            }
+
+            removidos.add(sku + ":" + qtd);
+        }
+
+        System.out.printf("Compra finalizada para cliente %s. Total: R$ %.2f%n", clienteId, cart.calcularTotalComPreco());
+        cart.limparComPreco();
+    }
+
+    /**
+     * Finaliza a compra: verifica disponibilidade no estoque e decrementa as quantidades.
+     * Se algum item não puder ser atendido, desfaz as remoções já feitas e informa o usuário.
+     */
+    public void finalizarCompra() {
+        var itens = this.getCarrinho().getItensDetalhados();
+        if (itens.isEmpty()) {
+            System.out.println("Carrinho vazio. Nada a finalizar.");
+            return;
+        }
+
+        // lista de itens que já foram reduzidos no estoque (produtoId, quantidade)
+        java.util.List<String> removidos = new java.util.ArrayList<>();
+
+        for (ItemCarrinho it : itens) {
+            String sku = it.getProduto().getId();
+            int qtd = it.getQuantidade();
+
+            // usa a tabela simples de estoque em vez de acessar diretamente o objeto Estoque
+            boolean ok = decrementarTabelaEstoque(sku, qtd);
+            if (!ok) {
+                System.out.println("Estoque insuficiente para produto: " + sku + ". Finalização abortada.");
+                // desfazer removidos na tabela
+                for (String r : removidos) {
+                    // r tem formato sku:quant
+                    String[] parts = r.split(":");
+                    String s = parts[0];
+                    int q = Integer.parseInt(parts[1]);
+                    incrementarTabelaEstoque(s, q);
+                }
+                return;
+            }
+
+            removidos.add(sku + ":" + qtd);
+        }
+
+        // Se chegou aqui, todos os itens foram removidos do estoque — gera resumo e limpa carrinho
+        System.out.printf("Compra finalizada. Total: R$ %.2f%n", this.getCarrinho().calcularTotalComPreco());
+        this.getCarrinho().limparComPreco();
     // BLOCO DE PEDDIDOS
 
     // A ideia é criar um pedido, encher ele de itens e depois pagar.

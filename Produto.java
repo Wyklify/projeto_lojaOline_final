@@ -57,7 +57,7 @@ public class Produto {
     }
 
     public int getPreco() {
-        // TODO Auto-generated method stub
+
         throw new UnsupportedOperationException("Unimplemented method 'getPreco'");
     }
 
