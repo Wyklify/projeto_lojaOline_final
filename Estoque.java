@@ -69,7 +69,6 @@ public class Estoque {
             return;
         }
 
-        System.out.println("================ ESTOQUE ATUAL ================");
 
         for (ItemEstoque item : itens.values()) {
 
@@ -110,4 +109,5 @@ public class Estoque {
 
         return false;
     }
+    
 }

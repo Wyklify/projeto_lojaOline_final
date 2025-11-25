@@ -14,7 +14,7 @@ public class TabelaPreco {
 
     public void adicionarPreco(Preco preco) {
 
-        precos.add(preco);
+        this.precos.add(preco);
     }
 
     public double obterPrecoVigente(LocalDate hoje) {
