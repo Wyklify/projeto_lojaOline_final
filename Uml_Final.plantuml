@@ -49,9 +49,14 @@ class Usuario {
     -telefone:String
 }
 
+
+
 class Cliente extends Usuario {
-    -cpf:String
-    -dataNascimento:Date
+    -id:String
+    -nome:String
+    -email:String
+    +adicionarEndereco()
+    +localizarEndereco()
 }
 
 class Funcionario extends Usuario {
