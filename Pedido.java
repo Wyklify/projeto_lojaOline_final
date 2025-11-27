@@ -14,8 +14,6 @@ public class Pedido {
     private TotalPedido totalPedido;
     private Pagamento pagamento;
 
-    
-
     public Pedido(Cliente cliente, String id) {
         this.cliente = cliente;
         this.id = id;
@@ -123,6 +121,25 @@ public class Pedido {
         return id;
     }
 
+    
+
+    public String getStatus() {
+        return status;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
 
     
+
+    public void setStatus(StatusPagamento confirmado) {
+        this.status = "confirmado";
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ID = %s | Status Pagamento = %s", this.id, this.status);
+    }
+
 }

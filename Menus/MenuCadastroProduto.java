@@ -1,5 +1,8 @@
+package Menus;
 import java.util.List;
 import java.util.Scanner;
+
+import Sistema;
 
 public class MenuCadastroProduto {
 

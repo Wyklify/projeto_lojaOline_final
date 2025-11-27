@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import Menus.MenuUtils;
+
 public class Sistema {
 
     private static Sistema sistema;
@@ -25,9 +27,6 @@ public class Sistema {
         return sistema;
     }
 
-    // essa classe está virando um monstro, porém corrigir isso não é uma batalha
-    // que quero travar.
-
     private Map<String, Produto> produtos = new HashMap<>();
     private Map<String, Categoria> categorias = new HashMap<>();
     private Map<String, TabelaPreco> tabelasPreco = new HashMap<>();
@@ -35,9 +34,11 @@ public class Sistema {
     private Map<String, Estoque> estoques = new HashMap<>();
     private Map<String, Pedido> pedidos = new HashMap<>();
 
+    private Map<String, Cliente> clientes = new HashMap<>();
+
     private GeradorSku geradorSku = new GeradorSku();
 
-    // gambiarra para fazer categoria
+    // inicializa a categoria com uma label padrão de sem categoria
 
     private void inicializarCategoriasPadrao() {
 
@@ -212,14 +213,16 @@ public class Sistema {
     }
 
     /**
-     * Consulta a quantidade disponível na tabela de estoque (não acessa o objeto `Estoque`).
+     * Consulta a quantidade disponível na tabela de estoque (não acessa o objeto
+     * `Estoque`).
      */
     public int consultarQuantidadeTabela(String produtoId) {
         return tabelaEstoque.getOrDefault(produtoId, 0);
     }
 
     /**
-     * Decrementa a tabela de estoque na finalização. Retorna true se conseguiu decrementar.
+     * Decrementa a tabela de estoque na finalização. Retorna true se conseguiu
+     * decrementar.
      */
     public boolean decrementarTabelaEstoque(String produtoId, int quantidade) {
         int atual = tabelaEstoque.getOrDefault(produtoId, 0);
@@ -349,7 +352,7 @@ public class Sistema {
 
     }
 
-    public double consultarPrecoEm(String produtoId, LocalDate data) {
+    public void consultarPrecoEm(String produtoId, LocalDate data) {
 
         Produto p = produtos.get(produtoId);
 
@@ -365,7 +368,11 @@ public class Sistema {
             throw new IllegalArgumentException("Produto sem tabela de preço" + produtoId);
         }
 
-        return tabela.obterPrecoVigente(data);
+        double preco = tabela.obterPrecoVigente(data);
+
+        System.out.printf("Preço vigente para %s em %s: R$ %.2f%n",
+                produtoId, data, preco);
+
     }
 
     public void mostrarProdutosComPreco() {
@@ -397,7 +404,7 @@ public class Sistema {
 
     }
 
-    //Bloco do carrinho
+    // Bloco do carrinho
 
     // Mapa de carrinhos por cliente (cada cliente tem seu carrinho)
     private java.util.Map<String, Carrinho> carrinhos = new java.util.HashMap<>();
@@ -409,11 +416,13 @@ public class Sistema {
 
     // Retorna ou cria um carrinho associado ao clienteId
     public Carrinho getOrCreateCarrinho(String clienteId) {
-        if (clienteId == null || clienteId.isEmpty()) clienteId = "DEFAULT";
+        if (clienteId == null || clienteId.isEmpty())
+            clienteId = "DEFAULT";
         return carrinhos.computeIfAbsent(clienteId, id -> new Carrinho(id));
     }
 
-    // Cria explicitamente um carrinho para um cliente (se já existir, retorna o existente)
+    // Cria explicitamente um carrinho para um cliente (se já existir, retorna o
+    // existente)
     public Carrinho criarCarrinhoParaCliente(String clienteId) {
         return getOrCreateCarrinho(clienteId);
     }
@@ -435,7 +444,8 @@ public class Sistema {
             return;
         }
 
-        // Usa o novo método seguro do Carrinho que recebe o preço unitário (cart DEFAULT)
+        // Usa o novo método seguro do Carrinho que recebe o preço unitário (cart
+        // DEFAULT)
         this.getCarrinho().adicionarProdutoComPreco(p, quantidade, preco);
         System.out.printf("Adicionado ao carrinho: %s x%d (R$ %.2f each)%n", produtoId, quantidade, preco);
     }
@@ -451,7 +461,8 @@ public class Sistema {
         for (ItemCarrinho item : cart.getItensDetalhados()) {
             Produto pr = item.getProduto();
             System.out.printf("SKU: %s | Nome: %s | Qtde: %d | Unit: R$ %.2f | Subtotal: R$ %.2f%n",
-                pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(), item.getQuantidade() * item.getPrecoUnitario());
+                    pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(),
+                    item.getQuantidade() * item.getPrecoUnitario());
         }
 
         System.out.printf("Total: R$ %.2f%n", cart.calcularTotalComPreco());
@@ -476,7 +487,8 @@ public class Sistema {
 
         Carrinho cart = getOrCreateCarrinho(clienteId);
         cart.adicionarProdutoComPreco(p, quantidade, preco);
-        System.out.printf("Adicionado ao carrinho (cliente=%s): %s x%d (R$ %.2f each)%n", clienteId, produtoId, quantidade, preco);
+        System.out.printf("Adicionado ao carrinho (cliente=%s): %s x%d (R$ %.2f each)%n", clienteId, produtoId,
+                quantidade, preco);
     }
 
     public void mostrarCarrinhoDetalhadoParaCliente(String clienteId) {
@@ -490,7 +502,8 @@ public class Sistema {
         for (ItemCarrinho item : cart.getItensDetalhados()) {
             Produto pr = item.getProduto();
             System.out.printf("SKU: %s | Nome: %s | Qtde: %d | Unit: R$ %.2f | Subtotal: R$ %.2f%n",
-                pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(), item.getQuantidade() * item.getPrecoUnitario());
+                    pr.getId(), pr.getNome(), item.getQuantidade(), item.getPrecoUnitario(),
+                    item.getQuantidade() * item.getPrecoUnitario());
         }
 
         System.out.printf("Total: R$ %.2f%n", cart.calcularTotalComPreco());
@@ -512,7 +525,8 @@ public class Sistema {
 
             boolean ok = decrementarTabelaEstoque(sku, qtd);
             if (!ok) {
-                System.out.println("Estoque insuficiente para produto: " + sku + ". Finalização abortada para cliente " + clienteId);
+                System.out.println("Estoque insuficiente para produto: " + sku + ". Finalização abortada para cliente "
+                        + clienteId);
                 for (String r : removidos) {
                     String[] parts = r.split(":");
                     String s = parts[0];
@@ -525,13 +539,16 @@ public class Sistema {
             removidos.add(sku + ":" + qtd);
         }
 
-        System.out.printf("Compra finalizada para cliente %s. Total: R$ %.2f%n", clienteId, cart.calcularTotalComPreco());
+        System.out.printf("Compra finalizada para cliente %s. Total: R$ %.2f%n", clienteId,
+                cart.calcularTotalComPreco());
         cart.limparComPreco();
     }
 
     /**
-     * Finaliza a compra: verifica disponibilidade no estoque e decrementa as quantidades.
-     * Se algum item não puder ser atendido, desfaz as remoções já feitas e informa o usuário.
+     * Finaliza a compra: verifica disponibilidade no estoque e decrementa as
+     * quantidades.
+     * Se algum item não puder ser atendido, desfaz as remoções já feitas e informa
+     * o usuário.
      */
     public void finalizarCompra() {
         var itens = this.getCarrinho().getItensDetalhados();
@@ -547,7 +564,8 @@ public class Sistema {
             String sku = it.getProduto().getId();
             int qtd = it.getQuantidade();
 
-            // usa a tabela simples de estoque em vez de acessar diretamente o objeto Estoque
+            // usa a tabela simples de estoque em vez de acessar diretamente o objeto
+            // Estoque
             boolean ok = decrementarTabelaEstoque(sku, qtd);
             if (!ok) {
                 System.out.println("Estoque insuficiente para produto: " + sku + ". Finalização abortada.");
@@ -565,10 +583,28 @@ public class Sistema {
             removidos.add(sku + ":" + qtd);
         }
 
-        // Se chegou aqui, todos os itens foram removidos do estoque — gera resumo e limpa carrinho
+        // Se chegou aqui, todos os itens foram removidos do estoque — gera resumo e
+        // limpa carrinho
         System.out.printf("Compra finalizada. Total: R$ %.2f%n", this.getCarrinho().calcularTotalComPreco());
         this.getCarrinho().limparComPreco();
+    }
+
     // BLOCO DE PEDDIDOS
+
+    public void criarPedido(String idCliente) {
+
+        Cliente cliente = clientes.get(idCliente);
+
+        if (cliente == null) {
+            System.out.println("Cliente não encontrado para o ID: " + idCliente);
+            return;
+        }
+
+        Pedido pedido = criarPedido(cliente);
+
+        System.out.println("Pedido criado com sucesso! ID: " + pedido.getId() + " | Cliente: " + cliente.getNome());
+
+    }
 
     // A ideia é criar um pedido, encher ele de itens e depois pagar.
     public Pedido criarPedido(Cliente cliente) {
@@ -578,8 +614,6 @@ public class Sistema {
         Pedido pedido = new Pedido(cliente, idPedido);
 
         pedidos.put(idPedido, pedido);
-
-        System.out.println("Pedido criado com sucesso! ID: " + idPedido + " | Cliente: " + cliente.getNome());
 
         return pedido;
     }
@@ -605,12 +639,40 @@ public class Sistema {
             return;
         }
 
-        double precoAtual = tabela.obterPrecoVigente(LocalDate.now());
+        // Procura disponibilidade do item em todos os estoques
+
+        String estoqueUsadoID = null;
+
+        for (Map.Entry<String, Estoque> entrada : estoques.entrySet()) {
+
+            String idEstoque = entrada.getKey();
+            Estoque estoque = entrada.getValue();
+
+            if (estoque.temProdutoNoEstoque(idProduto)) {
+
+                boolean conseguiuRemoverEstoque = estoque.retirarProduto(idProduto, qtd);
+
+                if (conseguiuRemoverEstoque) {
+                    estoqueUsadoID = idEstoque;
+                    break;
+                }
+            }
+        }
+
+        if (estoqueUsadoID == null) {
+
+            System.out.printf("Produto %s não disponível em quantidade suficiente (%d) em nenhum estoque.%n", idProduto,
+                    qtd);
+            return;
+
+        }
+
+        double precoAtual = qtd * tabela.obterPrecoVigente(LocalDate.now());
 
         pedido.addItem(produto, qtd, precoAtual);
 
-        System.out.printf("Item adicionado ao pedido %s: %s (Qtd: %d, Preço: R$ %.2f)%n",
-                idPedido, produto.getNome(), qtd, precoAtual);
+        System.out.printf("Item adicionado ao pedido %s: %s (Qtd: %d, Preço: R$ %.2f) retiado do estoque: %s%n",
+                idPedido, produto.getNome(), qtd, precoAtual, estoqueUsadoID);
 
     }
 
@@ -640,6 +702,8 @@ public class Sistema {
 
             String idPagamento = "PAG-" + idPedido;
             pedido.registrarPagamento(idPagamento, metodo);
+
+            pedido.setStatus(StatusPagamento.CONFIRMADO);
         } else {
 
             System.out.println("Pedido não encontrado: " + idPedido);
@@ -684,11 +748,117 @@ public class Sistema {
         if (pedido != null) {
             System.out.println("=== Detalhes do Pedido ===");
             System.out.println("ID: " + idPedido);
-            System.out.println("Cliente: " + pedido.getPagamento());
-            System.out.println("Status: " + pedido.getPagamento().getStatusPagamento());
+            System.out.println("Cliente: " + pedido.getCliente().getNome());
+            System.out.println("Status: " + pedido.getStatus());
             System.out.println("Total: R$ " + pedido.calcularTotal());
         } else {
             System.out.println("Pedido não encontrado: " + idPedido);
+        }
+
+    }
+
+    // BLOCO DE CADASTRO DE CLIENTE
+
+    public void cadastrarCliente(String nome, String email, String cpf) {
+
+        if (this.localizarCpf(cpf)) {
+
+            System.out.println("Cliente já cadastrado");
+
+        } else {
+
+            String idCliente = geradorSku.gerarProximoSKUCliente();
+
+            Cliente cliente = new Cliente(idCliente, nome, email, cpf);
+
+            this.clientes.put(idCliente, cliente);
+
+            System.out.println("Cliente cadastrado com sucesso! ID: " + idCliente + " | Nome: " + nome);
+
+        }
+
+    }
+
+    private Boolean localizarCpf(String cpf) {
+
+        for (Cliente cliente : this.clientes.values()) {
+
+            if (cliente.getCpf().equals(cpf)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void mostrarCliente(String idCliente) {
+
+        MenuUtils.limparTela();
+
+        Cliente cliente = clientes.get(idCliente);
+
+        if (cliente == null) {
+
+            System.out.println("Cliente não encontrado para o ID: " + idCliente);
+            return;
+        }
+
+        System.out.println("=== Dados do Cliente ===");
+
+        System.out.println("ID: " + cliente.getId());
+        System.out.println("Nome: " + cliente.getNome());
+        System.out.println("CPF: " + cliente.getCpf());
+        System.out.println("Email: " + cliente.getEmail());
+
+        System.out.println(MenuUtils.centralizarTextos(String.format("Endereço: %s ", cliente.getId())));
+
+        if (!cliente.getEnderecos().isEmpty()) {
+
+            for (Endereco enderecos : cliente.getEnderecos()) {
+
+                System.out.println(enderecos);
+            }
+        } else {
+
+            System.out.println("Nenhum endereço cadastrado");
+        }
+
+        System.out.println(MenuUtils.centralizarTextos(String.format("Pedidos: %s ", cliente.getId())));
+
+        boolean temPedidos = false;
+
+        for (Pedido pedido : pedidos.values()) {
+
+            if (pedido.getCliente().getId().equals(idCliente)) {
+
+                System.out.println(pedido);
+                temPedidos = true;
+            }
+        }
+
+        if (!temPedidos) {
+
+            System.out.println("Nenhum pedido encontrado para este cliente");
+        }
+
+    }
+
+    public void listarClientes() {
+
+        if (this.clientes.isEmpty()) {
+
+            System.out.println("Nenhum cliente cadastrado");
+
+        } else {
+
+            for (Map.Entry<String, Cliente> entrada : clientes.entrySet()) {
+
+                Cliente cliente = entrada.getValue();
+
+                System.out.println(" ID: " + entrada.getKey() + " | Nome: " + cliente.getNome());
+
+            }
+
         }
 
     }
