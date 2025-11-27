@@ -14,41 +14,28 @@ public class Carrinho {
     public Carrinho() {
         this.id = "DEFAULT";
     }
-
-    // API legacy: Guarda preço 0.0
+    // O Carrinho guarda apenas intenção: produto + quantidade
     public void adicionarProduto(Produto produto, int quantidade) {
         if (produto == null || quantidade <= 0) return;
-        adicionarProdutoComPreco(produto, quantidade, 0.0);
-    }
 
-    // Novo método: adiciona produto registrando o preço unitário vigente
-    public void adicionarProdutoComPreco(Produto produto, int quantidade, double precoUnitario) {
-        if (produto == null || quantidade <= 0) return;
-
-        ItemCarrinho item = new ItemCarrinho(produto, quantidade, precoUnitario);
-        this.itens.add(item);
-    }
-
-    // Calcula total usando os preços armazenados nos itens
-    public double calcularTotalComPreco() {
-        double soma = 0.0;
+        // se já houver item para o produto, incrementa quantidade
         for (ItemCarrinho it : itens) {
-            soma += it.getQuantidade() * it.getPrecoUnitario();
+            if (it.getProduto().getId().equals(produto.getId())) {
+                it.setQuantidade(it.getQuantidade() + quantidade);
+                return;
+            }
         }
-        return soma;
-    }
 
-    // Compatibilidade: calcularTotal retorna total com preços.
-    public double calcularTotal() {
-        return calcularTotalComPreco();
-    }
-
-    public void limparComPreco() {
-        this.itens.clear();
+        ItemCarrinho item = new ItemCarrinho(produto, quantidade);
+        this.itens.add(item);
     }
 
     public List<ItemCarrinho> getItensDetalhados() {
         return this.itens;
+    }
+
+    public void limpar() {
+        this.itens.clear();
     }
 
     public String getId() {
@@ -94,6 +81,7 @@ public class Carrinho {
 
     //Conveniência: vai remover pelo objeto Produto.
     //Olha Antonio, fiz sobrecarga.
+    //Convenience: remove by Produto object
     public boolean removerProdutoDoCarrinho(Produto produto, int quantidade) {
         if (produto == null) return false;
         return removerProdutoDoCarrinho(produto.getId(), quantidade);
