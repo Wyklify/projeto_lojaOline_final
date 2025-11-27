@@ -14,19 +14,20 @@ class Produto {
 
 class ItemEstoque {
     -quantidade: int
-    
+
 }
 
 class Categoria {
     -nome: String
-    
+
 }
 
 'atualize o uml do estoque, pois ele não condiz com o algoritmo.
 class Estoque {
-    +adicionarProduto()
-    +diminuirItem()
-    +exibirEstoque()
+    + addItem(produto : Produto, quantidade : int) : void
+    + diminuirItem(codigo : String, quantidade : int) : void
+    + temProdutoNoEstoque(codigo : String) : boolean
+    + exibirEstoque() : void
     
 }
 
@@ -78,8 +79,8 @@ enum StatusDisponibilidadeEstoque {
 
 class ItemCarrinho {
     -quantidade: int
-    
-    
+
+
 }
 
 class Carrinho {
@@ -92,11 +93,6 @@ class Carrinho {
     +removerProdutoDoCarrinho()
 }
 
-class Catalogo {
-    +listarProdutosDisponiveis()
-    +buscarProduto()
-    +filtrarCategoria()
-}
 
 class Pedido {
     -id: String
@@ -107,7 +103,7 @@ class Pedido {
 class ItemPedido {
     -quantidade: int
     -precoUnitario: double
-    
+
 }
 
 class TotalPedido {
@@ -121,11 +117,7 @@ class Pagamento {
 
 }
 
-class RastrearPedido {
-    -codigoRastreamento: String
-    -statusAtual: StatusPedido
-    -dataAtualizacao: Date
-}
+
 
 class NotaFiscal {
     -id: String
@@ -164,16 +156,16 @@ class Loja {
 Produto "1" -- "*" TabelaPreco
 
 ' Estoque possui ItemEstoque (composição)
-Estoque *-- "0..*" ItemEstoque
+Estoque "1" *--> "0..*" ItemEstoque
 
 ' ItemEstoque referencia Produto (associação)
-ItemEstoque "1" -- "*" Produto
+ItemEstoque "1" --> "*" Produto
 
-' Produto pertence a uma categoria (agregação)
-Categoria "1" -- "*" Produto
+' Produto associa-se a Categoria (associação)
+Categoria "1" <-- "*" Produto
 
-' Carrinho é composto por ItemCarrinho
-Carrinho *-- "0..*" ItemCarrinho
+' Carrinho é agregado por ItemCarrinho
+Carrinho "1" o-- "0..*" ItemCarrinho
 
 ' ItemCarrinho associa Produto
 ItemCarrinho "1" -- "1" Produto
@@ -203,7 +195,7 @@ Cliente *-- "1" Carrinho
 Pedido *-- "1" NotaFiscal
 
 ' Pagamento é associado ao Pedido (composição — depende do Pedido)
-Pedido o-- "1" Pagamento 
+Pedido o-- "1" Pagamento
 
 ' Pagamento usa enums
 Pagamento ..> MetodoPagamento
@@ -221,69 +213,93 @@ title DIAGRAMA DO SISTEMA - Loja Online
 package "Sistema" {
 
     class Sistema {
-        
-        +cadastrarProduto()
-        +cadastrarCategoria()
-        +listarCatalogo()
-        +adicionarAoCarrinho()
+        // Atributos
+        -sistema: Sistema
+        -produtos: Map<String, Produto>
+        -categorias: Map<String, Categoria>
+        -tabelasPreco: Map<String, TabelaPreco>
+        -estoques: Map<String, Estoque>
+        -pedidos: Map<String, Pedido>
+        -clientes: Map<String, Cliente>
+        -carrinhos: Map<String, Carrinho>
+        -tabelaEstoque: Map<String, Integer>
+        -geradorSku: GeradorSku
+
+        // Métodos
+        +cadastrarProduto(nome: String, tamanho: String, cor: String, descricao: String, categoria: String)
+        +mostrarProdutosNaoVinculadosAoEstoque()
+        +cadastrarCategoria(categoria: String)
+        +criarEstoque(nome: String)
+        +adiconarProdutoEstoque(nomeEstoque: String, id: String, quantidade: int)
+        +diminuirProdutoEstoque(nomeEstoque: String, id: String, quantidade: int)
+        +mostrarEstoque()
+        +mostrarEstoque(nome: String)
+        +definirPrecoPadrao(produtoId: String, valor: double)
+        +adicionarPromocao(produtoId: String, valor: double, inicio: LocalDate, fim: LocalDate)
+        +consultarPreco(produtoID: String): double
+        +consultarPrecoEm(produtoId: String, data: LocalDate): double
+        +mostrarProdutosComPreco()
+        +adicionarAoCarrinho(produtoId: String, quantidade: int)
+        +mostrarCarrinhoDetalhado()
+        +adicionarAoCarrinhoParaCliente(clienteId: String, produtoId: String, quantidade: int)
+        +mostrarCarrinhoDetalhadoParaCliente(clienteId: String)
+        +finalizarCompraParaCliente(clienteId: String)
         +finalizarCompra()
-        +registrarPagamento()
-        +emitirNotaFiscal()
+        +criarPedido(idCliente: String)
+        +adicionarItemAoPedido(idPedido: String, idProduto: String, qtd: int)
+        +configurarFreteDesconto(idPedido: String, frete: BigDecimal, desconto: BigDecimal)
+        +registrarPagamento(idPedido: String, metodo: MetodoPagamento)
+        +confirmarPagamento(idPedido: String)
+        +cancelarPagamento(idPedido: String)
+        +exibirPedido(idPedido: String)
+        +cadastrarCliente(nome: String, email: String, cpf: String)
+        +mostrarCliente(idCliente: String)
+        +listarClientes()
+        +getNomesCategorias(): List<String>
     }
 
-    class ControladorProduto {
-        +criarProduto()
-        +editarProduto()
-        +listarProdutos()
+    class Produto {
+
     }
 
-    class ControladorCliente {
-        +autenticarCliente()
-        +registrarCliente()
-        +gerenciarEnderecos()
+    class Categoria {
+
     }
 
-    class ControladorCarrinho {
-        +adicionarItem()
-        +removerItem()
-        +calcularTotal()
+    class TabelaPreco {
+
     }
 
-    class ControladorPedido {
-        +criarPedido()
-        +cancelarPedido()
-        +rastrearPedido()
+    class Estoque {
+
     }
 
-    class ControladorPagamento {
-        +processarPagamento()
-        +emitirNota()
+    class Pedido {
+
     }
+
+
+    class Cliente {
+
+    }
+
+    class Carrinho {
+
+    }
+
+
 }
 
 ' -------------------- LIGAÇÕES DO SISTEMA --------------------
 
-Sistema --> ControladorProduto
-Sistema --> ControladorCliente
-Sistema --> ControladorCarrinho
-Sistema --> ControladorPedido
-Sistema --> ControladorPagamento
+Sistema --> Produto
+Sistema --> Categoria
+Sistema --> TabelaPreco
+Sistema --> Pedido
+Sistema --> Cliente
+Sistema --> Carrinho
+Sistema --> Estoque
 
-' Ligação com classes do domínio
-ControladorProduto --> Produto
-ControladorProduto --> Estoque
 
-ControladorCliente --> Cliente
-ControladorCliente --> Endereco
-
-ControladorCarrinho --> Carrinho
-ControladorCarrinho --> ItemCarrinho
-
-ControladorPedido --> Pedido
-ControladorPedido --> TotalPedido
-ControladorPedido --> RastrearPedido
-
-ControladorPagamento --> Pagamento
-ControladorPagamento --> NotaFiscal
 
 @enduml

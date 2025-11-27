@@ -1,3 +1,4 @@
+package Menus;
 public class MenuUtils {
 
     public static String centralizarTextos(String texto) {
