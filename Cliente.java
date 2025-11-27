@@ -5,6 +5,10 @@ public class Cliente {
 
     private java.util.List<Endereco> enderecos = new java.util.ArrayList<>();
 
+    public Cliente(String nome, String id){
+        this.id = id;
+        this.nome = nome;
+    }
     public Cliente(String id, String nome, String email) {
         this.id = id;
         this.nome = nome;

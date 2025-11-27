@@ -17,9 +17,11 @@ public class Main {
         sistema.definirPrecoPadrao("PROD-00000003", 99.90);
 
         // Adiciona ao estoque
-        sistema.adiconarProdutoEstoque("PROD-00000001", 10);
-        sistema.adiconarProdutoEstoque("PROD-00000002", 5);
-        sistema.adiconarProdutoEstoque("PROD-00000003", 3);
+        // cria um estoque para os testes e adiciona produtos nele
+        sistema.criarEstoque("MAIN");
+        sistema.adiconarProdutoEstoque("MAIN", "PROD-00000001", 10);
+        sistema.adiconarProdutoEstoque("MAIN", "PROD-00000002", 5);
+        sistema.adiconarProdutoEstoque("MAIN", "PROD-00000003", 3);
 
         // --- Testes antigos (comentados para manter histórico) ---
         // // Teste do carrinho (usa preço vigente via tabela de preços)
@@ -33,7 +35,8 @@ public class Main {
         // ---------------------------------------------------------
 
         // Novo teste: simula fluxo de compra por cliente (adiciona, mostra, finaliza e verifica estoque)
-        Cliente cliente = new Cliente("C001", "João Silva", "joao@example.com");
+        // Cria/obtém o cliente via o singleton `Sistema` (uso explícito do singleton)
+        Cliente cliente = sistema.criarCliente("C001", "João Silva", "joao@example.com");
 
         // adiciona dois endereços ao cliente e associa um ao carrinho
         Endereco e1 = new Endereco("ADDR1", "Rua das Flores", "123", "São Paulo", "01000-000", "Apto 12");
